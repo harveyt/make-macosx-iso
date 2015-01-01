@@ -88,7 +88,7 @@ find_output_iso()
 	echo "$OUTPUT_ISO"
 	return
     fi
-    echo ~/Desktop/$VERSION_NAME.app
+    echo ~/Desktop/$VERSION_NAME.iso
 }
 
 set_defaults()
@@ -133,22 +133,36 @@ Succesfully created ISO: $OUTPUT_ISO
 "
 }
 
+error_cleanup()
+{
+    clear_safe_mode
+    {
+	hdiutil detach "$VOLUMES_INSTALL_APP"
+	hdiutil detach "$VOLUMES_INSTALL_BUILD" 
+	rm -f "$TEMP_IMAGE.sparseimage"
+	rm -f "$TEMP_IMAGE.cdr"
+    } >/dev/null 2>&1
+}
+
 set_safe_mode()
 {
+    trap 'set +o xtrace; exit 1' SIGHUP SIGINT SIGTERM
+    trap 'set +o xtrace; error_cleanup' EXIT
     set -e errexit
     set -o noglob
     set -o nounset
     set -o pipefail
-    set -o xtrace
+    set -o xtrace    
 }
 
 clear_safe_mode()
 {
-    set +e errexit
-    set +o noglob
-    set +o nounset
-    set +o pipefail
     set +o xtrace
+    set +o pipefail
+    set +o nounset
+    set +o noglob
+    set +e errexit
+    trap - EXIT SIGHUP SIGINT SIGTERM
 }
 
 mount_installer_image()
@@ -161,7 +175,7 @@ convert_bootimage_to_sparsebundle()
     hdiutil convert "$VOLUMES_INSTALL_APP/BaseSystem.dmg" -format UDSP -o "$TEMP_IMAGE"
 
     # Increase the sparse bundle capacity to accommodate the packages
-    hdiutil resize -size "$SIZE_SPARSEBUNDLE" "$TEMP_IMAGE"
+    hdiutil resize -size "$SIZE_SPARSEBUNDLE" "$TEMP_IMAGE.sparseimage"
 
     # Mount the sparse bundle for package addition
     hdiutil attach "$TEMP_IMAGE.sparseimage" -noverify -nobrowse -mountpoint "$VOLUMES_INSTALL_BUILD"
