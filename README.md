@@ -32,6 +32,6 @@ License
 
 Copyright (c) 2015 Harvey John Thompson.
 
-See [LICENSE] file for license rights and limitations (MIT).
+See [LICENSE](LICENSE) file for license rights and limitations (MIT).
 
 
