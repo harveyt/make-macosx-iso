@@ -11,11 +11,26 @@ Supports
 
 NOTE: You *must* have already downloaded the OS installer in the App Store.
 
+Installation
+------------
+
+```
+$ make install
+```
+
 Example
 -------
 
+Show usage:
+
 ```
-$ ./make-macosx-iso.sh -v Mavericks -o Mavericks-Install.iso
+$ make-macosx-iso -?
+```
+
+Create a Mac OS X 10.9 "Mavericks" install image in the current directory called `Mavericks-Install.iso`:
+
+```
+$ make-macosx-iso -t Mavericks -o Mavericks-Install.iso
 ```
 
 Thanks
@@ -33,5 +48,3 @@ License
 Copyright (c) 2015 Harvey John Thompson.
 
 See [LICENSE](LICENSE) file for license rights and limitations (MIT).
-
-
