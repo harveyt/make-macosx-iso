@@ -54,7 +54,8 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 
-DEFAULT_VERSION=Yosemite
+VERSION=%%VERSION%%
+DEFAULT_TYPE=Yosemite
 DEFAULT_INSTALL_APP=
 DEFAULT_OUTPUT_ISO=
 DEFAULT_APPLICATIONS_DIRS="/Applications"
@@ -68,11 +69,12 @@ SIZE_SPARSEBUNDLE=8g
 # --------------------------------------------------------------------------------
 usage()
 {
-    echo "usage: make-macosx-iso [-v version] [-i install.app] [-o image.iso]
+    echo "usage: make-macosx-iso [-v] [-t type] [-i install.app] [-o image.iso]
 
--v version		Version of Mac OS X ISO to build. 
-			Default: $DEFAULT_VERSION
-			Supported versions:
+-v			Show version and exit.
+-t type			Type of Mac OS X ISO to build. 
+			Default: $DEFAULT_TYPE
+			Supported types:
 				\"10.9\" or \"Mavericks\"
 				\"10.10\" or \"Yosemite\"
 -i install.app		Location of install application.
@@ -89,23 +91,23 @@ error()
     exit 1
 }
 
-set_version()
+set_type()
 {
-    VERSION="$1"
-    case $VERSION in
+    TYPE="$1"
+    case $TYPE in
 	10.9|Mavericks)
-	    VERSION_ID="10.9"
-	    VERSION_NAME="Mavericks"
+	    TYPE_ID="10.9"
+	    TYPE_NAME="Mavericks"
 	    ;;
 	10.10|Yosemite)
-	    VERSION_ID="10.10"
-	    VERSION_NAME="Yosemite"
+	    TYPE_ID="10.10"
+	    TYPE_NAME="Yosemite"
 	    ;;
 	*)
-	    error "Unknown Mac OS X version \"$VERSION\""
+	    error "Unknown Mac OS X type \"$TYPE\""
 	    ;;
     esac
-    VERSION_TITLE="Mac OS X $VERSION_ID \"$VERSION_NAME\""
+    TYPE_TITLE="Mac OS X $TYPE_ID \"$TYPE_NAME\""
 }
 
 find_install_app()
@@ -115,7 +117,7 @@ find_install_app()
 	return
     fi
 
-    local app="Install OS X $VERSION_NAME.app"
+    local app="Install OS X $TYPE_NAME.app"
     local dir path
     for dir in $DEFAULT_APPLICATIONS_DIRS
     do
@@ -133,36 +135,47 @@ find_output_iso()
 	echo "$OUTPUT_ISO"
 	return
     fi
-    echo ~/Desktop/$VERSION_NAME.iso
+    echo ~/Desktop/$TYPE_NAME.iso
 }
 
 set_defaults()
 {
-    set_version $DEFAULT_VERSION
+    set_type $DEFAULT_TYPE
     DEFAULT_INSTALL_APP=$(find_install_app)
     DEFAULT_OUTPUT_ISO=$(find_output_iso)
 }
 
 set_params()
 {
-    set_version $VERSION
+    set_type $TYPE
     INSTALL_APP=$(find_install_app)
     if [[ -z "$INSTALL_APP" ]]; then
-	error "Cannot find $VERSION_TITLE installer, download it in App Store."
+	error "Cannot find $TYPE_TITLE installer, download it in App Store."
     fi
     OUTPUT_ISO=$(find_output_iso)
+    if [[ -e "$OUTPUT_ISO" ]]; then
+	error "Output $OUTPUT_ISO already exists, use -o option to change output location."
+    fi
+}
+
+show_version()
+{
+    program_path=$(type -p $0)
+    echo "make-macosx-iso version $VERSION
+Copyright (c) 2015 Harvey John Thompson
+See $program_path for LICENSE."
 }
 
 show_header()
 {
     echo "
 --------------------------------------------------------------------------------
-Creating $VERSION_TITLE ISO...
+Creating $TYPE_TITLE ISO...
 
-Version:	$VERSION
-Version Name:	$VERSION_NAME
-Version ID:	$VERSION_ID
-Version Title:	$VERSION_TITLE
+Type:		$TYPE
+Type Name:	$TYPE_NAME
+Type ID:	$TYPE_ID
+Type Title:	$TYPE_TITLE
 Install App:	$INSTALL_APP
 Output ISO:	$OUTPUT_ISO
 --------------------------------------------------------------------------------
@@ -229,7 +242,7 @@ convert_bootimage_to_sparsebundle()
     rm "$VOLUMES_INSTALL_BUILD/System/Installation/Packages"
     cp -rp "$VOLUMES_INSTALL_APP/Packages" "$VOLUMES_INSTALL_BUILD/System/Installation/"
 
-    if [[ $VERSION_ID == "10.10" ]]; then
+    if [[ $TYPE_ID == "10.10" ]]; then
 	# Copy Base System  
 	cp -rp "$VOLUMES_INSTALL_APP/BaseSystem.dmg" "$VOLUMES_INSTALL_BUILD"
 	cp -rp "$VOLUMES_INSTALL_APP/BaseSystem.chunklist" "$VOLUMES_INSTALL_BUILD"
@@ -266,11 +279,15 @@ convert_sparsebundle_to_iso()
 
 set_defaults
 
-while getopts v:i:o: c
+while getopts vt:i:o: c
 do
     case $c in
 	v)
-	    VERSION=$OPTARG
+	    show_version
+	    exit 0
+	    ;;
+	t)
+	    TYPE=$OPTARG
 	    ;;
 	i)
 	    INSTALL_APP=$OPTARG
@@ -285,6 +302,7 @@ do
 done
 
 set_params
+show_version
 show_header
 
 set_safe_mode
