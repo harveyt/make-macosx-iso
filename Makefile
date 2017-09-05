@@ -3,7 +3,9 @@ NAME	= make-macosx-iso
 BINDIR	= /usr/local/bin
 VERSION	= $(shell git describe --tags 2>/dev/null || echo unknown)
 
-install:
+install: $(BINDIR)/$(NAME)
+
+$(BINDIR)/$(NAME): $(NAME).sh Makefile
 	@echo "Installing $(NAME) as $(BINDIR)/$(NAME) ..."
 	@rm -f $(BINDIR)/$(NAME)
 	@awk '/%%README%%/ {								\
