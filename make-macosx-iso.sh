@@ -4,7 +4,7 @@
 # %%LICENSE%%
 #
 VERSION=%%VERSION%%
-DEFAULT_TYPE=Yosemite
+DEFAULT_TYPE=Sierra
 DEFAULT_INSTALL_APP=
 DEFAULT_OUTPUT_ISO=
 DEFAULT_APPLICATIONS_DIRS="/Applications"
@@ -26,6 +26,8 @@ usage()
 			Supported types:
 				\"10.9\" or \"Mavericks\"
 				\"10.10\" or \"Yosemite\"
+				\"10.11\" or \"El Capitan\"
+				\"10.12\" or \"Sierra\"
 -i install.app		Location of install application.
 			Default: $DEFAULT_INSTALL_APP
 -o image.iso		Location to output ISO image.iso
@@ -44,13 +46,25 @@ set_type()
 {
     TYPE="$1"
     case $TYPE in
-	10.9|Mavericks)
+	10.9|Mavericks|mavericks)
 	    TYPE_ID="10.9"
 	    TYPE_NAME="Mavericks"
+	    INSTALL_NAME="Mavericks"
 	    ;;
-	10.10|Yosemite)
+	10.10|Yosemite|yosemite)
 	    TYPE_ID="10.10"
 	    TYPE_NAME="Yosemite"
+	    INSTALL_NAME="Yosemite"
+	    ;;
+	10.11|El\ Capitan|el\ capitan)
+	    TYPE_ID="10.11"
+	    TYPE_NAME="El Capitan"
+	    INSTALL_NAME="El Capitan"
+	    ;;
+	10.12|Sierra|sierra)
+	    TYPE_ID="10.12"
+	    TYPE_NAME="Sierra"
+	    INSTALL_NAME="macOS Sierra"
 	    ;;
 	*)
 	    error "Unknown Mac OS X type \"$TYPE\""
@@ -66,7 +80,7 @@ find_install_app()
 	return
     fi
 
-    local app="Install OS X $TYPE_NAME.app"
+    local app="Install OS X $INSTALL_NAME.app"
     local dir path
     for dir in $DEFAULT_APPLICATIONS_DIRS
     do
@@ -98,7 +112,7 @@ set_params()
 {
     set_type $TYPE
     INSTALL_APP=$(find_install_app)
-    if [[ -z "$INSTALL_APP" ]]; then
+    if [[ "$INSTALL_APP" == "" || ! -d "$INSTALL_APP" ]]; then
 	error "Cannot find $TYPE_TITLE installer, download it in App Store."
     fi
     OUTPUT_ISO=$(find_output_iso)
@@ -191,7 +205,7 @@ convert_bootimage_to_sparsebundle()
     rm "$VOLUMES_INSTALL_BUILD/System/Installation/Packages"
     cp -rp "$VOLUMES_INSTALL_APP/Packages" "$VOLUMES_INSTALL_BUILD/System/Installation/"
 
-    if [[ $TYPE_ID == "10.10" ]]; then
+    if [[ $TYPE_ID != "10.9" ]]; then
 	# Copy Base System  
 	cp -rp "$VOLUMES_INSTALL_APP/BaseSystem.dmg" "$VOLUMES_INSTALL_BUILD"
 	cp -rp "$VOLUMES_INSTALL_APP/BaseSystem.chunklist" "$VOLUMES_INSTALL_BUILD"
