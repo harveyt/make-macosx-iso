@@ -1,13 +1,16 @@
 # -*- Makefile -*-
-NAME	= make-macosx-iso
-BINDIR	= /usr/local/bin
+NAME		= make-macosx-iso
+BINDIR		= /usr/local/bin
+NAME_SRC	= $(NAME).sh
+NAME_DEST	= $(BINDIR)/$(NAME)
+
 VERSION	= $(shell git describe --tags 2>/dev/null || echo unknown)
 
-install: $(BINDIR)/$(NAME)
+install: $(NAME_DEST)
 
-$(BINDIR)/$(NAME): $(NAME).sh Makefile
-	@echo "Installing $(NAME) as $(BINDIR)/$(NAME) ..."
-	@rm -f $(BINDIR)/$(NAME)
+$(NAME_DEST): $(NAME_SRC) Makefile
+	@echo "Installing $(NAME) as $(NAME_DEST) ..."
+	@rm -f $(NAME_DEST)
 	@awk '/%%README%%/ {								\
 		while ((getline line < "README.md") > 0 && line !~ /^Copyright/)	\
 			printf("# %s\n", line);						\
@@ -19,6 +22,12 @@ $(BINDIR)/$(NAME): $(NAME).sh Makefile
 		next;									\
 	}										\
 	{ sub(/%%VERSION%%/, "$(VERSION)", $$0); print $$0; }' \
-		$(NAME).sh > $(BINDIR)/$(NAME)
-	@chmod a+rx $(BINDIR)/$(NAME)
+		$(NAME_SRC) > $(NAME_DEST)
+	@chmod a+rx $(NAME_DEST)
 	@echo "Done"
+
+clean:
+	rm -f *~
+
+clobber:
+	rm -f $(NAME_DEST)
